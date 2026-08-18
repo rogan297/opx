@@ -1,0 +1,361 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SectorEnum {
+  MANUFACTURING
+  FOOD_SERVICE
+  LOGISTICS
+  HEALTHCARE
+  RETAIL
+}
+
+enum StepCategory {
+  ACTION
+  LOGIC
+  TRANSFORM
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PreparationStatus {
+  PENDING
+  IN_PROGRESS
+  READY
+  COMPLETED
+}
+
+enum MovementReason {
+  PRODUCTION_FINISH
+  SALE
+  WASTE
+  ADJUSTMENT
+  PURCHASE
+}
+
+enum ProductType {
+  RAW_MATERIAL
+  FINISHED_GOOD
+}
+
+enum MovementType {
+  INPUT
+  OUTPUT
+  PRODUCTION_INPUT
+  PRODUCTION_OUTPUT
+}
+
+enum WorkflowStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ERROR
+}
+
+enum ProductionStatus {
+  PENDING
+  IN_PROGRESS
+  READY
+  COMPLETED
+}
+
+model Tenant {
+  id        String     @id @default(uuid())
+  name      String
+  sector    SectorEnum @default(MANUFACTURING)
+  config    Json       @default("{}")
+
+  users     User[]
+  products  Product[]
+  customers Customer[]
+  orders    Order[]
+  stations  Station[]
+  workflows Workflow[]
+  actionTypes ActionType[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tenants")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  firstName String?
+  lastName  String?
+  tenant    Tenant?   @relation(fields: [tenantId], references: [id])
+  tenantId  String?
+  roles     String[]  @default(["admin"])
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  name      String
+  password  String?
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  orders    Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("customers")
+}
+
+model Product {
+  id          String      @id @default(uuid())
+  name        String
+  description String?
+  price       Decimal     @db.Decimal(10, 2)
+  type        ProductType @default(FINISHED_GOOD)
+
+  tenantId  String
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  inventory  Inventory?
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("products")
+}
+
+model Inventory {
+  id                String  @id @default(uuid())
+  productId         String  @unique
+  product           Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantityAvailable Int
+  minThreshold      Int     @default(5)
+  lastUpdated       DateTime @updatedAt
+
+  movements StockMovement[]
+
+  createdAt DateTime @default(now())
+
+  @@map("inventories")
+}
+
+model StockMovement {
+  id          String       @id @default(uuid())
+  inventoryId String
+  inventory   Inventory    @relation(fields: [inventoryId], references: [id])
+  userId      String
+  orderId     String?
+  order       Order?       @relation(fields: [orderId], references: [id])
+  quantity    Int
+  type        MovementType
+  reason      String?
+  createdAt   DateTime     @default(now())
+
+  @@index([inventoryId])
+  @@map("stock_movements")
+}
+
+model Order {
+  id            String        @id @default(uuid())
+  customerId    String
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  status        OrderStatus
+  paymentStatus PaymentStatus
+  total         Decimal       @db.Decimal(10, 2)
+  tenantId      String
+  tenant        Tenant        @relation(fields: [tenantId], references: [id])
+
+  items         OrderItem[]
+  stockMovements StockMovement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([tenantId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                String            @id @default(uuid())
+  orderId           String
+  order             Order             @relation(fields: [orderId], references: [id])
+  productId         String
+  product           Product           @relation(fields: [productId], references: [id])
+  quantity          Int
+  preparationStatus PreparationStatus
+  startedAt         DateTime?
+  finishedAt        DateTime?
+
+  productionOrder ProductionOrder?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+model Station {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  isActive    Boolean @default(true)
+  currentLoad Int     @default(0)
+  responsible String?
+
+  tenantId  String
+  tenant    Tenant        @relation(fields: [tenantId], references: [id])
+  queueItems StationQueue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("stations")
+}
+
+model Workflow {
+  id          String         @id @default(uuid())
+  name        String
+  description String?
+  isActive    Boolean        @default(true)
+  status      WorkflowStatus @default(DRAFT)
+  tenantId    String
+  tenant      Tenant         @relation(fields: [tenantId], references: [id])
+
+  steps       WorkflowStep[]
+  dsl         Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("workflows")
+}
+
+model WorkflowStep {
+  id            String   @id @default(uuid())
+  workflowId    String
+  workflow      Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  actionTypeId  String
+  actionType    ActionType @relation(fields: [actionTypeId], references: [id])
+  estimatedTime Int?
+  nextStepId    String?
+  category      StepCategory
+  config        Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("workflow_steps")
+}
+
+model ActionType {
+  id        String       @id @default(uuid())
+  name      String
+  category  StepCategory
+  icon      String?
+  isSystem  Boolean      @default(false)
+  tenantId  String?
+  tenant    Tenant?      @relation(fields: [tenantId], references: [id])
+
+  workflowSteps WorkflowStep[]
+
+  @@index([tenantId, name])
+  @@map("action_types")
+}
+
+model ProductionOrder {
+  id          String    @id @default(uuid())
+  orderItemId String    @unique
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id])
+  status      ProductionStatus @default(PENDING)
+  tenantId    String
+  startedAt   DateTime?
+  finishedAt  DateTime?
+
+  queueItems StationQueue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("production_orders")
+}
+
+model StationQueue {
+  id                String          @id @default(uuid())
+  stationId         String
+  station           Station         @relation(fields: [stationId], references: [id])
+  productionOrderId String
+  productionOrder   ProductionOrder @relation(fields: [productionOrderId], references: [id])
+  enteredAt         DateTime        @default(now())
+  exitedAt          DateTime?
+
+  @@index([stationId])
+  @@index([productionOrderId])
+  @@map("station_queue")
+}
+
+model Standard {
+  id          String   @id @default(uuid())
+  name        String
+  type        String
+  version     String?
+  description String?
+  tenantId    String?
+
+  sections    StandardSection[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("standards")
+}
+
+model StandardSection {
+  id          String   @id @default(uuid())
+  standardId  String
+  title       String
+  code        String?
+  description String?
+  standard    Standard @relation(fields: [standardId], references: [id])
+
+  @@map("standard_sections")
+}
+
+model Requirement {
+  id                 String   @id @default(uuid())
+  sectionId          String
+  description        String
+  complianceCriteria String?
+  criticality        String
+
+  @@map("requirements")
+}

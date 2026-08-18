@@ -1,0 +1,133 @@
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  type: "RAW_MATERIAL" | "FINISHED_GOOD";
+  image: string;
+  createdAt: string;
+}
+
+export const MOCK_PRODUCTS: Product[] = [
+  {
+    id: "p1",
+    name: "Filé Mignon ao Molho Madeira",
+    description: "Filé mignon grelhado com molho madeira e batatas rústicas",
+    price: 89.9,
+    category: "Pratos Principais",
+    type: "FINISHED_GOOD",
+    image: "🥩",
+    createdAt: "2026-01-15",
+  },
+  {
+    id: "p2",
+    name: "Risoto de Camarão",
+    description: "Risoto cremoso com camarões frescos e parmesão",
+    price: 72.5,
+    category: "Pratos Principais",
+    type: "FINISHED_GOOD",
+    image: "🍤",
+    createdAt: "2026-01-15",
+  },
+  {
+    id: "p3",
+    name: "Tomate Italiano",
+    description: "Tomate italiano selecionado por quilo",
+    price: 8.9,
+    category: "Hortifrúti",
+    type: "RAW_MATERIAL",
+    image: "🍅",
+    createdAt: "2026-02-01",
+  },
+  {
+    id: "p4",
+    name: "Arroz Arbóreo",
+    description: "Arroz arbóreo para risotos por quilo",
+    price: 24.0,
+    category: "Mercearia",
+    type: "RAW_MATERIAL",
+    image: "🌾",
+    createdAt: "2026-02-01",
+  },
+  {
+    id: "p5",
+    name: "Manteiga com Sal",
+    description: "Manteiga artesanal com sal por quilo",
+    price: 32.0,
+    category: "Laticínios",
+    type: "RAW_MATERIAL",
+    image: "🧈",
+    createdAt: "2026-01-20",
+  },
+  {
+    id: "p6",
+    name: "Picanha na Brasa",
+    description: "Picanha grelhada na brasa com farofa da casa",
+    price: 98.0,
+    category: "Pratos Principais",
+    type: "FINISHED_GOOD",
+    image: "🔥",
+    createdAt: "2026-02-10",
+  },
+  {
+    id: "p7",
+    name: "Queijo Parmesão",
+    description: "Queijo parmesão curado por quilo",
+    price: 55.0,
+    category: "Laticínios",
+    type: "RAW_MATERIAL",
+    image: "🧀",
+    createdAt: "2026-01-01",
+  },
+  {
+    id: "p8",
+    name: "Azeite Extra Virgem",
+    description: "Azeite extra virgem prensado a frio (litro)",
+    price: 48.0,
+    category: "Mercearia",
+    type: "RAW_MATERIAL",
+    image: "🫒",
+    createdAt: "2026-01-01",
+  },
+  {
+    id: "p9",
+    name: "Salmão Grelhado",
+    description: "Posta de salmão grelhada com legumes ao vapor",
+    price: 84.0,
+    category: "Pratos Principais",
+    type: "FINISHED_GOOD",
+    image: "🐟",
+    createdAt: "2026-02-15",
+  },
+  {
+    id: "p10",
+    name: "Pizza Margherita",
+    description: "Pizza de muçarela de búfala, tomate e manjericão",
+    price: 59.9,
+    category: "Pizzas",
+    type: "FINISHED_GOOD",
+    image: "🍕",
+    createdAt: "2026-02-10",
+  },
+  {
+    id: "p11",
+    name: "Filé Mignon Bovino",
+    description: "Filé mignon bovino por quilo",
+    price: 72.0,
+    category: "Carnes",
+    type: "RAW_MATERIAL",
+    image: "🥩",
+    createdAt: "2026-01-15",
+  },
+  {
+    id: "p12",
+    name: "Batata Inglesa",
+    description: "Batata inglesa selecionada por quilo",
+    price: 6.5,
+    category: "Hortifrúti",
+    type: "RAW_MATERIAL",
+    image: "🥔",
+    createdAt: "2026-01-15",
+  },
+];
